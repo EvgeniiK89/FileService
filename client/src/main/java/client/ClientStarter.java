@@ -14,7 +14,7 @@ import io.netty.util.CharsetUtil;
 import java.net.InetSocketAddress;
 import java.util.Scanner;
 
-public class ClientStarter {
+public class ClientStarter{
 
     public ClientStarter() {
         run();
