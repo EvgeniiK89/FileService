@@ -16,7 +16,6 @@ public class HelloServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf input = (ByteBuf) msg;
-
         String inputMessage = input.toString(StandardCharsets.UTF_8);
         System.out.println("Server get message = " + inputMessage);
 
