@@ -2,13 +2,12 @@ package client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
 
 import java.net.InetSocketAddress;
@@ -16,23 +15,17 @@ import java.util.Scanner;
 
 public class ClientStarter {
 
+    private static boolean loginSuccess = false;
+
+
     public ClientStarter() {
         run();
     }
 
     private void run() {
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            //String command = scanner.nextLine();
-
-            getFuture();
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        getFuture();
     }
+
     private void getFuture() {
         EventLoopGroup group = new NioEventLoopGroup();
 
@@ -44,19 +37,44 @@ public class ClientStarter {
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) {
-                            socketChannel.pipeline().addLast(new ClientHandler());
+                            ChannelPipeline pipeline = socketChannel.pipeline();
+
+                            pipeline.addLast(new StringDecoder());
+                            pipeline.addLast(new StringEncoder());
+
+                            pipeline.addLast(new ClientHandler());
                         }
                     });
             ChannelFuture channelFuture = clientBootstrap.connect("localhost", 8000).sync();
+            Scanner scanner = new Scanner(System.in);
+
+            auth(channelFuture.channel());
+
+            while (scanner.hasNextLine()) {
+                String msg = scanner.nextLine();
+                Channel channel = channelFuture.channel();
+                channel.writeAndFlush(msg);
+                channel.flush();
+            }
             channelFuture.channel().closeFuture().sync();
-            return;
         } catch (Exception e) {
             System.out.println(e.getMessage());
         } finally {
             group.shutdownGracefully();
         }
-        throw new RuntimeException();
     }
 
+    private void auth(Channel channel) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Please login!");
+        while (!loginSuccess) {
+            String command = scanner.nextLine();
+            channel.writeAndFlush(command);
+            channel.flush();
+        }
+    }
 
+    public static void setLoginSuccess(boolean loginSuccess) {
+        ClientStarter.loginSuccess = loginSuccess;
+    }
 }

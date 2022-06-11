@@ -10,15 +10,13 @@ import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.util.Scanner;
 
-public class ClientHandler extends SimpleChannelInboundHandler {
+public class ClientHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object o) {
-        System.out.println("Answer from server - " + ((ByteBuf) o) .toString(CharsetUtil.UTF_8));
-    }
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) {
-        ctx.writeAndFlush(Unpooled.copiedBuffer("scanner.nextLine()", CharsetUtil.UTF_8));
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, String message) {
+        if (message.contains("success")) {
+            ClientStarter.setLoginSuccess(true);
+        }
+        System.out.println("Message from server: " + message);
     }
 }
